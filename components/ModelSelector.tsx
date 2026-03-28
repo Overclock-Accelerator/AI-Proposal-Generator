@@ -7,42 +7,39 @@ interface ModelSelectorProps {
   onChange: (modelId: string) => void;
 }
 
-const strengthColors: Record<Model["strength"], string> = {
-  strong: "bg-green-100 text-green-800",
-  moderate: "bg-yellow-100 text-yellow-800",
-  weak: "bg-red-100 text-red-800",
+const strengthStyles: Record<Model["strength"], string> = {
+  strong: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  moderate: "bg-amber-50 text-amber-700 border border-amber-200",
+  weak: "bg-rose-50 text-rose-700 border border-rose-200",
 };
 
 export default function ModelSelector({ selectedModelId, onChange }: ModelSelectorProps) {
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700">
-        Select Model
-      </label>
+    <div className="space-y-2 pt-1">
       <div className="grid gap-2">
         {MODELS.map((model) => (
           <button
             key={model.id}
             onClick={() => onChange(model.id)}
-            className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
+            className={`w-full text-left px-3 py-2.5 rounded-lg border-2 transition-all ${
               selectedModelId === model.id
-                ? "border-indigo-500 bg-indigo-50"
-                : "border-gray-200 bg-white hover:border-gray-300"
+                ? "border-violet-500 bg-violet-50"
+                : "border-zinc-200 bg-white hover:border-zinc-300"
             }`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-medium text-gray-900">{model.name}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">{model.provider}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${strengthColors[model.strength]}`}>
-                  {model.strength} tool-caller
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="font-medium text-zinc-900 text-sm">{model.name}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-zinc-400">{model.provider}</span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${strengthStyles[model.strength]}`}>
+                  {model.strength}
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-500">{model.description}</p>
-              <span className="text-xs text-gray-400 ml-2 shrink-0">
-                ${model.inputCostPer1M}/1M in · ${model.outputCostPer1M}/1M out
+              <p className="text-xs text-zinc-500">{model.description}</p>
+              <span className="text-xs text-zinc-400 ml-2 shrink-0 font-mono">
+                ${model.inputCostPer1M}/${model.outputCostPer1M}
               </span>
             </div>
           </button>

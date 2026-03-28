@@ -184,8 +184,8 @@ export function simulateToolExecution(toolId: string, args: Record<string, unkno
       return {
         tool_id: toolId,
         success: true,
-        message: `PDF created: "${args.title}.pdf" (simulated — would use a PDF library like puppeteer or jsPDF in production)`,
-        data: { filename: `${args.title}.pdf`, size: "142 KB" },
+        message: `PDF ready: "${args.title}.pdf" — use the Download PDF button to save it`,
+        data: { filename: `${args.title}.pdf` },
       };
     case "email_document":
       return {

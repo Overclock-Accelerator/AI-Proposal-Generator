@@ -10,7 +10,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   defaultHeaders: {
     "HTTP-Referer": "https://ai-proposal-generator.local",
-    "X-Title": "AI Proposal Generator",
+    "X-Title": "AI Proposal & Agreement Builder",
   },
 });
 
@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
       modelId,
       systemPrompt,
       enabledToolIds = [],
+      documentType = "proposal",
+      tweakRequest,
+      existingContent,
     } = body;
 
     if (!description || !modelId || !systemPrompt) {
@@ -43,15 +46,19 @@ export async function POST(req: NextRequest) {
 
     const startTime = Date.now();
 
+    // Build user message — either initial generation or a tweak on existing content
+    let userMessage: string;
+    if (tweakRequest && existingContent) {
+      const docLabel = documentType === "agreement" ? "consulting agreement" : "proposal";
+      userMessage = `Here is the existing ${docLabel}:\n\n${existingContent}\n\n---\n\nPlease apply the following tweak and return the full updated document:\n\n${tweakRequest}`;
+    } else {
+      const docLabel = documentType === "agreement" ? "consulting agreement" : "business proposal";
+      userMessage = `Please generate a professional ${docLabel} for the following:\n\n${description}`;
+    }
+
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      {
-        role: "system",
-        content: systemPrompt,
-      },
-      {
-        role: "user",
-        content: `Please generate a professional business proposal for the following:\n\n${description}`,
-      },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
     ];
 
     // First API call — explicitly non-streaming
@@ -80,7 +87,6 @@ export async function POST(req: NextRequest) {
       ];
 
       for (const toolCall of firstMessage.tool_calls) {
-        // OpenRouter may use function or custom tool call shape
         const tc = toolCall as unknown as { function?: { name: string; arguments?: string }; name?: string; id: string };
         const toolId = tc.function?.name ?? tc.name ?? "";
         let args: Record<string, unknown> = {};
