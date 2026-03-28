@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      proposal: finalContent,
+      content: finalContent,
       toolCallResults,
       metrics: {
         durationMs: duration,

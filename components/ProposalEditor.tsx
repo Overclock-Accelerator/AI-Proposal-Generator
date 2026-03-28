@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 
 interface ToolCallResult {
   tool_id: string;
@@ -14,9 +15,52 @@ interface ToolCallResult {
 interface ProposalEditorProps {
   content: string;
   toolCallResults: ToolCallResult[];
-  onCopy: () => void;
+  onCopy?: () => void;
   documentType?: "proposal" | "agreement";
 }
+
+// Defined at module level — stable reference, never recreated on render
+const MARKDOWN_COMPONENTS: Components = {
+  h1: ({ children }) => <h1 className="text-2xl font-bold text-zinc-900 mt-0 mb-4 pb-3 border-b border-zinc-200">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-lg font-semibold text-zinc-800 mt-6 mb-2">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-base font-semibold text-zinc-800 mt-5 mb-2">{children}</h3>,
+  h4: ({ children }) => <h4 className="text-sm font-semibold text-zinc-700 mt-4 mb-1">{children}</h4>,
+  p: ({ children }) => <p className="text-sm text-zinc-700 leading-relaxed mb-3">{children}</p>,
+  ul: ({ children }) => <ul className="text-sm text-zinc-700 mb-3 space-y-1.5 list-none pl-0">{children}</ul>,
+  ol: ({ children }) => <ol className="text-sm text-zinc-700 mb-3 space-y-1.5 list-decimal list-outside pl-5">{children}</ol>,
+  li: ({ children, ...props }) => {
+    const isOrdered = (props as { ordered?: boolean }).ordered;
+    return isOrdered ? (
+      <li className="text-sm text-zinc-700 pl-1">{children}</li>
+    ) : (
+      <li className="flex items-start gap-2 text-sm text-zinc-700">
+        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+        <span>{children}</span>
+      </li>
+    );
+  },
+  strong: ({ children }) => <strong className="font-semibold text-zinc-900">{children}</strong>,
+  em: ({ children }) => <em className="italic text-zinc-600">{children}</em>,
+  blockquote: ({ children }) => <blockquote className="border-l-4 border-violet-300 pl-4 my-3 text-zinc-500 italic text-sm">{children}</blockquote>,
+  code: ({ children, className }) => {
+    const isBlock = !!className?.includes("language-");
+    return isBlock ? (
+      <code className="block bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-3 text-xs font-mono text-zinc-800 overflow-x-auto my-3 whitespace-pre">{children}</code>
+    ) : (
+      <code className="bg-zinc-100 text-violet-700 rounded px-1.5 py-0.5 text-xs font-mono">{children}</code>
+    );
+  },
+  pre: ({ children }) => <pre className="my-3">{children}</pre>,
+  hr: () => <hr className="border-t border-zinc-200 my-5" />,
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-4">
+      <table className="w-full text-sm border-collapse">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-zinc-50">{children}</thead>,
+  th: ({ children }) => <th className="text-left text-xs font-semibold text-zinc-600 uppercase tracking-wide px-3 py-2 border border-zinc-200">{children}</th>,
+  td: ({ children }) => <td className="text-sm text-zinc-700 px-3 py-2 border border-zinc-200">{children}</td>,
+};
 
 function extractTitle(content: string): string {
   const h1 = content.match(/^#\s+(.+)/m);
@@ -35,7 +79,7 @@ export default function ProposalEditor({ content, toolCallResults, onCopy, docum
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
     setCopied(true);
-    onCopy();
+    onCopy?.();
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -149,74 +193,7 @@ export default function ProposalEditor({ content, toolCallResults, onCopy, docum
         )}
 
         <div className="bg-white border border-zinc-200 rounded-xl px-7 py-6">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              h1: ({ children }) => (
-                <h1 className="text-2xl font-bold text-zinc-900 mt-0 mb-4 pb-3 border-b border-zinc-200">{children}</h1>
-              ),
-              h2: ({ children }) => (
-                <h2 className="text-lg font-semibold text-zinc-800 mt-6 mb-2">{children}</h2>
-              ),
-              h3: ({ children }) => (
-                <h3 className="text-base font-semibold text-zinc-800 mt-5 mb-2">{children}</h3>
-              ),
-              h4: ({ children }) => (
-                <h4 className="text-sm font-semibold text-zinc-700 mt-4 mb-1">{children}</h4>
-              ),
-              p: ({ children }) => (
-                <p className="text-sm text-zinc-700 leading-relaxed mb-3">{children}</p>
-              ),
-              ul: ({ children }) => (
-                <ul className="text-sm text-zinc-700 mb-3 space-y-1.5 list-none pl-0">{children}</ul>
-              ),
-              ol: ({ children }) => (
-                <ol className="text-sm text-zinc-700 mb-3 space-y-1.5 list-decimal list-outside pl-5">{children}</ol>
-              ),
-              li: ({ children, ...props }) => {
-                const isOrdered = (props as { ordered?: boolean }).ordered;
-                return isOrdered ? (
-                  <li className="text-sm text-zinc-700 pl-1">{children}</li>
-                ) : (
-                  <li className="flex items-start gap-2 text-sm text-zinc-700">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
-                    <span>{children}</span>
-                  </li>
-                );
-              },
-              strong: ({ children }) => (
-                <strong className="font-semibold text-zinc-900">{children}</strong>
-              ),
-              em: ({ children }) => (
-                <em className="italic text-zinc-600">{children}</em>
-              ),
-              blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-violet-300 pl-4 my-3 text-zinc-500 italic text-sm">{children}</blockquote>
-              ),
-              code: ({ children, className }) => {
-                const isBlock = !!className?.includes("language-");
-                return isBlock ? (
-                  <code className="block bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-3 text-xs font-mono text-zinc-800 overflow-x-auto my-3 whitespace-pre">{children}</code>
-                ) : (
-                  <code className="bg-zinc-100 text-violet-700 rounded px-1.5 py-0.5 text-xs font-mono">{children}</code>
-                );
-              },
-              pre: ({ children }) => <pre className="my-3">{children}</pre>,
-              hr: () => <hr className="border-t border-zinc-200 my-5" />,
-              table: ({ children }) => (
-                <div className="overflow-x-auto my-4">
-                  <table className="w-full text-sm border-collapse">{children}</table>
-                </div>
-              ),
-              thead: ({ children }) => <thead className="bg-zinc-50">{children}</thead>,
-              th: ({ children }) => (
-                <th className="text-left text-xs font-semibold text-zinc-600 uppercase tracking-wide px-3 py-2 border border-zinc-200">{children}</th>
-              ),
-              td: ({ children }) => (
-                <td className="text-sm text-zinc-700 px-3 py-2 border border-zinc-200">{children}</td>
-              ),
-            }}
-          >
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
             {content}
           </ReactMarkdown>
         </div>
